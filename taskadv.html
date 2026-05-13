@@ -1,0 +1,2242 @@
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人生RPG</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  padding:12px;
+  background:#1a1a2e;
+  color:#fff;
+  font-family:sans-serif;
+  overflow-x:hidden;
+}
+
+h1,h2,h3{
+  margin:0 0 10px;
+}
+
+.container{
+  max-width:900px;
+  margin:auto;
+}
+
+.panel{
+  background:#16213e;
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+
+small{
+  opacity:.7;
+}
+
+.flex{
+  display:flex;
+  gap:10px;
+}
+
+.wrap{
+  flex-wrap:wrap;
+}
+
+.center{
+  text-align:center;
+}
+
+button{
+  background:#f72585;
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+input,select{
+  background:#0f3460;
+  border:none;
+  color:#fff;
+  padding:10px;
+  border-radius:8px;
+}
+
+#topStats{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+}
+
+.stat{
+  background:#0f3460;
+  border-radius:8px;
+  padding:8px;
+  text-align:center;
+}
+
+.statValue{
+  font-size:20px;
+  color:#4cc9f0;
+  font-weight:bold;
+}
+
+.bar{
+  height:22px;
+  background:#333;
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.barInner{
+  height:100%;
+  transition:.3s;
+}
+
+.hpBar{
+  background:linear-gradient(to right,#ef4444,#facc15);
+}
+
+.expBar{
+  background:linear-gradient(to right,#3b82f6,#06b6d4);
+}
+
+.task{
+  background:#0f3460;
+  border-radius:10px;
+  padding:10px;
+  margin-top:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.task:hover{
+  transform:translateY(-2px);
+}
+
+.task.done{
+  background:#444;
+  opacity:.6;
+  text-decoration:line-through;
+}
+
+.weight{
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.w1{background:#4ade80;color:#000;}
+.w3{background:#3b82f6;}
+.w5{background:#ef4444;}
+
+#comboText{
+  text-align:center;
+  font-size:28px;
+  color:gold;
+  font-weight:bold;
+  min-height:40px;
+}
+
+.party{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.card{
+  width:120px;
+  background:#111827;
+  border-radius:12px;
+  padding:8px;
+  text-align:center;
+  position:relative;
+  animation:pop .3s;
+}
+
+.card button{
+  width:100%;
+  margin-top:6px;
+  padding:6px;
+}
+
+.rarity{
+  font-weight:bold;
+}
+
+.role{
+  font-size:13px;
+  opacity:.9;
+}
+
+.element{
+  font-size:18px;
+}
+
+.partySlot{
+  min-height:120px;
+  border:2px dashed rgba(255,255,255,.2);
+  border-radius:10px;
+  padding:6px;
+}
+
+.damage{
+  position:fixed;
+  left:50%;
+  top:40%;
+  transform:translateX(-50%);
+  color:#fff;
+  font-size:40px;
+  font-weight:bold;
+  z-index:9999;
+  pointer-events:none;
+  animation:damageFloat .8s forwards;
+  text-shadow:0 0 10px #000;
+}
+
+#cutin{
+  position:fixed;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,.85);
+  z-index:5000;
+}
+
+#cutin img{
+  width:min(85vw,520px);
+  animation:cutinAnim .7s ease-out;
+  filter:
+  drop-shadow(0 0 10px #ff00ff)
+  drop-shadow(0 0 30px #a855f7);
+}
+
+#cutinText{
+  position:absolute;
+  bottom:10%;
+  font-size:32px;
+  color:#fff;
+  text-shadow:0 0 10px #ff00ff;
+}
+
+#gachaOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.92);
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:4000;
+}
+
+#gachaCards{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  justify-content:center;
+  margin-bottom:20px;
+}
+
+.fever{
+  animation:feverBg 1s infinite alternate;
+}
+
+@keyframes pop{
+  0%{transform:scale(0);}
+  100%{transform:scale(1);}
+}
+
+@keyframes damageFloat{
+  0%{
+    opacity:1;
+    transform:translate(-50%,0) scale(1);
+  }
+  100%{
+    opacity:0;
+    transform:translate(-50%,-100px) scale(1.5);
+  }
+}
+
+@keyframes cutinAnim{
+  0%{
+    transform:translateX(-400px) scale(.7);
+    opacity:0;
+  }
+  60%{
+    transform:translateX(30px) scale(1.15);
+    opacity:1;
+  }
+  100%{
+    transform:translateX(0) scale(1);
+  }
+}
+
+@keyframes feverBg{
+  from{
+    background:#1a1a2e;
+  }
+  to{
+    background:#442200;
+  }
+}
+
+@keyframes screenShake{
+  0%{transform:translate(0);}
+  25%{transform:translate(6px,-6px);}
+  50%{transform:translate(-6px,6px);}
+  75%{transform:translate(6px,6px);}
+  100%{transform:translate(0);}
+}
+
+/* タブシステム */
+.tabContainer{
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+  border-bottom:2px solid #4cc9f0;
+  padding-bottom:8px;
+}
+
+.tabBtn{
+  padding:8px 16px;
+  background:transparent;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+  border-bottom:3px solid transparent;
+  transition:.2s;
+}
+
+.tabBtn.active{
+  border-bottom-color:#4cc9f0;
+  color:#4cc9f0;
+}
+
+.tabBtn:hover{
+  background:#0f3460;
+  border-radius:4px;
+}
+
+.tabContent{
+  display:none;
+}
+
+.tabContent.active{
+  display:block;
+}
+
+/* チーム相性ボーナス */
+.synergyInfo{
+  background:#1a3a52;
+  border:2px solid #4cc9f0;
+  border-radius:8px;
+  padding:10px;
+  margin:10px 0;
+  text-align:center;
+}
+
+.synergyValue{
+  font-size:24px;
+  color:#06b6d4;
+  font-weight:bold;
+}
+
+.synergyBar{
+  height:16px;
+  background:#0f3460;
+  border-radius:8px;
+  margin:8px 0;
+}
+
+.synergyBarInner{
+  height:100%;
+  background:linear-gradient(to right,#4cc9f0,#a855f7);
+  border-radius:8px;
+  transition:.3s;
+}
+
+/* 図鑑 */
+.dexEntry{
+  background:#111827;
+  border:2px solid #4cc9f0;
+  border-radius:8px;
+  padding:12px;
+  margin-bottom:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* ログインボーナス */
+.loginBonusContainer{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
+  margin:10px 0;
+}
+
+.loginDay{
+  background:#111827;
+  border:2px solid #4cc9f0;
+  border-radius:8px;
+  padding:8px;
+  text-align:center;
+  font-size:12px;
+}
+
+.loginDay.completed{
+  border-color:#4ade80;
+  background:#1a3a1a;
+}
+
+.loginDay.today{
+  border-color:#facc15;
+  background:#3a3a1a;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1 class="center">人生RPG</h1>
+
+<!-- ログインボーナス表示 -->
+<div id="loginBonusAlert" style="display:none;background:#1a3a52;border:2px solid #4ade80;border-radius:8px;padding:12px;margin-bottom:12px;text-align:center;">
+  <div style="font-weight:bold;color:#4ade80;">🎁 ログインボーナス！</div>
+  <div id="loginBonusMsg" style="margin-top:8px;"></div>
+</div>
+
+<div class="panel">
+<h3>🧠 ステータス</h3>
+
+<div id="topStats">
+
+<div class="stat">
+<div>Lv</div>
+<div class="statValue" id="levelText"></div>
+</div>
+
+<div class="stat">
+<div>EXP</div>
+<div class="statValue" id="expText"></div>
+</div>
+
+<div class="stat">
+<div>Gold</div>
+<div class="statValue" id="goldText"></div>
+</div>
+
+<div class="stat">
+<div>Combo</div>
+<div class="statValue" id="comboStat"></div>
+</div>
+
+<div class="stat">
+<div>コイン</div>
+<div class="statValue" id="coinText"></div>
+</div>
+
+</div>
+
+<div style="margin-top:10px;">
+<div>EXP</div>
+<div class="bar">
+<div id="expBar" class="barInner expBar"></div>
+</div>
+</div>
+
+<!-- ログイン連続日数 -->
+<div style="background:#0f3460;border-radius:8px;padding:8px;margin-top:10px;text-align:center;">
+<div style="font-size:12px;color:#aaa;">ログイン連続</div>
+<div style="font-size:18px;color:#4ade80;font-weight:bold;" id="loginStreakText">0日</div>
+</div>
+
+<small>
+タスクを達成して成長。<br>
+コンボを繋ぐとフィーバー突入。
+</small>
+
+</div>
+
+<div class="panel">
+
+<h3>👹 ボス</h3>
+
+<!-- 期間限定ボス表示 -->
+<div style="background:#1a3a52;border-radius:8px;padding:8px;margin-bottom:8px;text-align:center;">
+<div style="font-size:12px;color:#aaa;">今週のボス</div>
+<div id="limitedBossInfo" style="font-size:14px;margin-top:4px;"></div>
+</div>
+
+<div id="bossInfo"></div>
+
+<div class="bar">
+<div id="bossBar" class="barInner hpBar"></div>
+</div>
+
+<div style="margin-top:10px;" id="bossDesc"></div>
+
+<!-- チーム相性ボーナス表示 -->
+<div class="synergyInfo">
+<div style="font-size:12px;color:#aaa;">チーム相性ボーナス</div>
+<div class="synergyValue" id="synergyDisplay">+0%</div>
+<div class="synergyBar">
+<div class="synergyBarInner" id="synergyBarInner" style="width:0%"></div>
+</div>
+</div>
+
+<small>
+タスク達成で攻撃。撃破するとガチャコイン。
+</small>
+
+<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+<button onclick="changeDifficulty('easy')" style="flex:1;min-width:70px;background:#4ade80;padding:6px;font-size:12px;">
+🟢 易 (×0.6)
+</button>
+<button onclick="changeDifficulty('normal')" style="flex:1;min-width:70px;background:#3b82f6;padding:6px;font-size:12px;">
+🔵 通常 (×1.0)
+</button>
+<button onclick="changeDifficulty('hard')" style="flex:1;min-width:70px;background:#ef4444;padding:6px;font-size:12px;">
+🔴 難 (×1.5)
+</button>
+</div>
+
+</div>
+
+<div id="comboText"></div>
+
+<div class="panel">
+
+<h3>📋 タスク</h3>
+
+<div class="flex">
+
+<input id="taskInput" placeholder="タスク">
+
+<select id="taskWeight">
+<option value="1">軽い</option>
+<option value="3">重要</option>
+<option value="5">最重要</option>
+</select>
+
+<button onclick="addTask()">追加</button>
+
+</div>
+
+<div id="taskList"></div>
+
+</div>
+
+<div class="panel">
+
+<h3>� マイルストーン</h3>
+
+<div id="milestoneList"></div>
+
+</div>
+
+<div class="panel">
+
+<h3>�🎰 ガチャ</h3>
+
+<div class="flex wrap">
+
+<button onclick="runGacha()">
+10連ガチャ
+</button>
+
+<button onclick="applyOfflineProgress()">
+放置回収
+</button>
+
+<button onclick="openShop()">
+🏪 ショップ
+</button>
+
+</div>
+
+<small>
+SSRは特別演出あり。
+</small>
+
+</div>
+
+
+<!-- タブシステム -->
+<div class="tabContainer">
+<button class="tabBtn active" onclick="switchTab('party')">⚔️ 編成</button>
+<button class="tabBtn" onclick="switchTab('dex')">📚 図鑑</button>
+<button class="tabBtn" onclick="switchTab('missions')">🎯 ミッション</button>
+<button class="tabBtn" onclick="switchTab('settings')">⚙️ 設定</button>
+</div>
+
+<!-- 編成タブ -->
+<div id="party-tab" class="tabContent active">
+<div class="panel">
+<h3>⚔️ 編成中</h3>
+<div class="party" id="partyArea"></div>
+</div>
+
+<div class="panel">
+<h3>🐉 モンスター一覧</h3>
+<div id="monsterList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;"></div>
+</div>
+</div>
+
+<!-- 図鑑タブ -->
+<div id="dex-tab" class="tabContent">
+<div class="panel">
+<h3>📚 モンスター図鑑</h3>
+<div id="dexContainer"></div>
+</div>
+</div>
+
+<!-- ミッションタブ -->
+<div id="missions-tab" class="tabContent">
+<div class="panel">
+<h3>🎯 デイリーミッション</h3>
+<div id="dailyList"></div>
+</div>
+
+<div class="panel">
+<h3>🎁 ログインボーナス</h3>
+<div id="loginBonusDisplay" class="loginBonusContainer"></div>
+</div>
+</div>
+
+<!-- 設定タブ -->
+<div id="settings-tab" class="tabContent">
+<div class="panel">
+<h3>⚙️ ゲーム設定</h3>
+<button onclick="resetGame()" style="background:#ef4444;width:100%;margin-top:8px;">
+⚠️ ゲームをリセット
+</button>
+</div>
+</div>
+
+</div>
+
+<!-- ガチャ -->
+<div id="gachaOverlay">
+
+<h2>ガチャ結果</h2>
+
+<div id="gachaCards"></div>
+
+<button onclick="closeGacha()">
+閉じる
+</button>
+
+</div>
+
+<!-- ショップ -->
+<div id="shopOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:4000;overflow-y:auto;padding:20px;">
+
+<h2 style="color:#fff;margin-bottom:20px;">🏪 ショップ</h2>
+
+<div id="shopItems" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;max-width:600px;margin-bottom:20px;"></div>
+
+<button onclick="closeShop()" style="margin-top:20px;">
+閉じる
+</button>
+
+</div>
+
+<!-- カットイン -->
+<div id="cutin">
+
+<img src="Akori.png">
+
+<div id="cutinText">
+「ごちそうの時間だよ♡」
+</div>
+
+</div>
+
+<script>
+
+// ======================
+// 基本定義
+// ======================
+
+const MAX_PARTY = 3;
+const EXP_PER_LEVEL = 100;
+
+const ELEMENTS = [
+  {id:"red", icon:"🔥"},
+  {id:"blue", icon:"💧"},
+  {id:"green", icon:"🌿"}
+];
+
+const ROLES = [
+  {id:"attacker", icon:"⚔️", name:"アタッカー"},
+  {id:"support", icon:"✨", name:"サポーター"},
+  {id:"tank", icon:"🛡️", name:"タンク"}
+];
+
+const MONSTER_NAMES = [
+"スライム",
+"ドラゴン",
+"フェアリー",
+"ゴーレム",
+"ナイト",
+"リーパー",
+"ウィッチ",
+"ファントム"
+];
+
+const RARITY = [
+  {name:"C", rate:60, color:"#9ca3af", multi:1},
+  {name:"UC", rate:25, color:"#4ade80", multi:1.2},
+  {name:"R", rate:10, color:"#3b82f6", multi:1.5},
+  {name:"SR", rate:4, color:"#a855f7", multi:2},
+  {name:"SSR", rate:1, color:"#facc15", multi:3}
+];
+
+const MILESTONES = [
+  {id:1, name:"初めの一歩", desc:"タスク達成×1", type:"tasks", count:1, reward:{coin:1, gold:10}},
+  {id:2, name:"軽調", desc:"タスク達成×5", type:"tasks", count:5, reward:{coin:1, gold:50}},
+  {id:3, name:"順調", desc:"タスク達成×10", type:"tasks", count:10, reward:{coin:2, gold:100}},
+  {id:4, name:"好調", desc:"タスク達成×25", type:"tasks", count:25, reward:{coin:2, gold:200}},
+  {id:5, name:"絶好調", desc:"タスク達成×50", type:"tasks", count:50, reward:{coin:3, gold:500}},
+  {id:6, name:"レベルアップ", desc:"Lv. 5到達", type:"level", count:5, reward:{coin:1, gold:100}},
+  {id:7, name:"中階級へ", desc:"Lv. 10到達", type:"level", count:10, reward:{coin:2, gold:300}},
+  {id:8, name:"上級者", desc:"Lv. 20到達", type:"level", count:20, reward:{coin:3, gold:500}},
+  {id:9, name:"コンボマスター", desc:"コンボ×20達成", type:"combo", count:20, reward:{coin:2, gold:150}},
+  {id:10, name:"ボス討伐", desc:"ボス撃破×5", type:"bosses", count:5, reward:{coin:2, gold:300}}
+];
+
+const SHOP_ITEMS = [
+  {id:1, name:"ガチャコイン", icon:"🪙", price:50, reward:{coin:1}},
+  {id:2, name:"ガチャコイン×3", icon:"🪙", price:140, reward:{coin:3}},
+  {id:3, name:"ガチャコイン×5", icon:"🪙", price:210, reward:{coin:5}},
+  {id:4, name:"ガチャコイン×10", icon:"🪙", price:350, reward:{coin:10}},
+  {id:5, name:"ボーナスEXP", icon:"✨", price:100, reward:{exp:50}},
+  {id:6, name:"ゴールドキット", icon:"💰", price:0, reward:{gold:100}}
+];
+
+const SKILLS = [
+  {id:1, name:"火力を強化", icon:"🔥", desc:"攻撃力が30%アップする", rarity:"UC"},
+  {id:2, name:"冷静を保つ", icon:"❄️", desc:"受けるダメージが10%削減される", rarity:"UC"},
+  {id:3, name:"回復", icon:"✨", desc:"味方全体のHPを30%回復する", rarity:"R"},
+  {id:4, name:"連撃", icon:"⚔️", desc:"そのターン中に攻撃が2回実行される", rarity:"R"},
+  {id:5, name:"幸運", icon:"⭐", desc:"10%の確率でガチャコイン+1獲得", rarity:"SR"},
+  {id:6, name:"暴風", icon:"🌪️", desc:"敵に強力な攻撃を与える", rarity:"SR"}
+];
+
+const DAILY_MISSIONS = [
+  {id:1, name:"初心者ユーザー", desc:"タスク達成×1", type:"tasks", target:1, reward:{coin:1, gold:10}},
+  {id:2, name:"仕事の時間", desc:"タスク達成×3", type:"tasks", target:3, reward:{coin:1, gold:30}},
+  {id:3, name:"レベルアップ", desc:"Lv. 3到達", type:"level", target:3, reward:{coin:1, gold:50}},
+  {id:4, name:"ボスバトル", desc:"ボス撃破×1", type:"bosses", target:1, reward:{coin:2, gold:100}},
+  {id:5, name:"コンボの達人", desc:"コンボ×5達成", type:"combo", target:5, reward:{coin:1, gold:20}},
+  {id:6, name:"金銭感覚", desc:"ゴールド獲得×200", type:"gold", target:200, reward:{coin:1, gold:50}}
+];
+
+// ======================
+// State
+// ======================
+
+let state = JSON.parse(localStorage.getItem("life_rpg")) || {
+
+  level:1,
+  exp:0,
+  gold:0,
+
+  combo:0,
+  maxCombo:0,
+
+  gachaCoins:3,
+
+  tasks:[],
+
+  companions:[],
+
+  party:[],
+
+  fever:{
+    active:false,
+    end:0
+  },
+
+  lastLogin:Date.now(),
+  loginStreak:0,
+  lastLoginDate:"",
+
+  offlineMax:24 * 60 * 60 * 1000,
+
+  tasksCompleted:0,
+  bossesDefeated:0,
+  goldEarned:0,
+
+  milestonesCompleted:[],
+
+  dailyMissionsCompleted:[],
+  dailyMissionsDate:"",
+
+  materials:{},
+
+  boss:{
+    hp:100,
+    maxHp:100,
+    element:"red",
+    phase:1,
+    difficulty:"normal"
+  },
+
+  teamBonus:0,
+  teamSynergyPercentage:0
+
+};
+
+// ======================
+// チーム相性ボーナス
+// ======================
+
+function calculateTeamSynergy(){
+
+  if(state.party.length < 2){
+    state.teamBonus = 0;
+    return 0;
+  }
+
+  let elements = state.party.map(c=>c.element);
+  let roles = state.party.map(c=>c.role);
+
+  let bonus = 0;
+
+  // 属性ボーナス: 全員違う属性 +20%
+  if(new Set(elements).size === elements.length){
+    bonus += 20;
+  }
+
+  // ロール多様性: 全員違うロール +15%
+  if(new Set(roles).size === roles.length){
+    bonus += 15;
+  }
+
+  // 属性相性チェーン: 火→緑→青のサイクル +10%
+  let hasChain = false;
+  if(elements.length >= 2){
+    for(let i=0;i<elements.length;i++){
+      let next = (i+1) % elements.length;
+      if(getElementMultiplier(elements[i], elements[next]) === 1.5){
+        hasChain = true;
+        break;
+      }
+    }
+    if(hasChain) bonus += 10;
+  }
+
+  state.teamBonus = Math.min(bonus, 50); // 上限50%
+  state.teamSynergyPercentage = state.teamBonus;
+
+  return state.teamBonus;
+
+}
+
+// ======================
+// ログインボーナス
+// ======================
+
+function checkLoginBonus(){
+
+  let today = getTodayDateKey();
+  let lastLogin = state.lastLoginDate;
+
+  if(lastLogin === today){
+    return; // 今日はすでにログイン済み
+  }
+
+  // 連続日数を更新
+  let yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+  if(lastLogin === yesterday){
+    state.loginStreak++;
+  } else {
+    state.loginStreak = 1;
+  }
+
+  state.lastLoginDate = today;
+
+  // ボーナス計算
+  let coin = Math.floor(state.loginStreak / 7) + 1; // 7日ごとに+1
+  let gold = state.loginStreak * 10;
+  let exp = state.loginStreak * 5;
+
+  state.gachaCoins += coin;
+  state.gold += gold;
+  state.exp += exp;
+
+  // アラート表示
+  let msg = `ログインボーナス！ (${state.loginStreak}日目)<br>`;
+  msg += `ガチャコイン+${coin}<br>`;
+  msg += `ゴールド+${gold}<br>`;
+  msg += `EXP+${exp}`;
+
+  setTimeout(()=>{
+    loginBonusAlert.style.display = "block";
+    loginBonusMsg.innerHTML = msg;
+    setTimeout(()=>{
+      loginBonusAlert.style.display = "none";
+    }, 5000);
+  }, 500);
+
+  save();
+
+}
+
+// ======================
+// 期間限定ボス
+// ======================
+
+function getLimitedBoss(){
+
+  let week = Math.floor(Date.now() / (7 * 86400000));
+
+  let bosses = [
+    {name:"フレイムドラゴン", element:"red", icon:"🔥", difficulty:1.2},
+    {name:"フロストキング", element:"blue", icon:"❄️", difficulty:1.15},
+    {name:"フォレストタイタン", element:"green", icon:"🌿", difficulty:1.1},
+    {name:"インフェルノロード", element:"red", icon:"🔥", difficulty:1.3},
+    {name:"ブリザードロード", element:"blue", icon:"❄️", difficulty:1.25}
+  ];
+
+  return bosses[week % bosses.length];
+
+}
+
+// ======================
+// タブシステム
+// ======================
+
+function switchTab(tabName){
+
+  // すべてのタブコンテンツを非表示
+  document.querySelectorAll('.tabContent').forEach(tab=>{
+    tab.classList.remove('active');
+  });
+
+  // すべてのタブボタンを非アクティブ化
+  document.querySelectorAll('.tabBtn').forEach(btn=>{
+    btn.classList.remove('active');
+  });
+
+  // 選択されたタブを表示
+  let tabElement = document.getElementById(tabName + '-tab');
+  if(tabElement){
+    tabElement.classList.add('active');
+  }
+
+  // 対応するボタンをアクティブ化
+  event.target.classList.add('active');
+
+}
+
+// ======================
+// リセット機能
+// ======================
+
+function resetGame(){
+
+  if(confirm('本当にゲームをリセットしますか？\\nすべてのデータが失われます。')){
+    localStorage.removeItem('life_rpg');
+    location.reload();
+  }
+
+}
+
+// ======================
+// 図鑑表示
+// ======================
+
+function renderDex(){
+
+  let dexContainer = document.getElementById('dexContainer');
+  if(!dexContainer) return;
+  
+  dexContainer.innerHTML = '';
+
+  // レアリティごとに集計
+  let byRarity = {};
+  state.companions.forEach(c=>{
+    if(!byRarity[c.rarity]){
+      byRarity[c.rarity] = [];
+    }
+    byRarity[c.rarity].push(c);
+  });
+
+  // 統計情報
+  let totalCount = state.companions.length;
+  let ssrCount = byRarity['SSR']?.length || 0;
+  let srCount = byRarity['SR']?.length || 0;
+
+  let stats = `
+  <div style="background:#0f3460;border-radius:8px;padding:12px;margin-bottom:12px;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;">
+      <div><div style="color:#aaa;font-size:12px;">総数</div><div style="font-size:18px;font-weight:bold;">${totalCount}</div></div>
+      <div><div style="color:#facc15;font-size:12px;">SSR</div><div style="font-size:18px;font-weight:bold;color:#facc15;">${ssrCount}</div></div>
+      <div><div style="color:#a855f7;font-size:12px;">SR</div><div style="font-size:18px;font-weight:bold;color:#a855f7;">${srCount}</div></div>
+      <div><div style="color:#3b82f6;font-size:12px;">R以下</div><div style="font-size:18px;font-weight:bold;color:#3b82f6;">${totalCount - ssrCount - srCount}</div></div>
+    </div>
+  </div>
+  `;
+
+  dexContainer.innerHTML += stats;
+
+  // レアリティごとにグループ化
+  Object.keys(byRarity).sort().forEach(rarity=>{
+    let group = `
+    <div style="margin-top:12px;">
+      <h4 style="color:#aaa;margin-bottom:8px;">${rarity}</h4>
+    `;
+
+    byRarity[rarity].forEach(c=>{
+      group += `
+      <div class="dexEntry">
+        <div>
+          <div style="font-weight:bold;color:${c.color};">${c.name}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:4px;">
+            ${c.elementIcon} ${c.roleIcon} Lv${c.level} ATK${Math.floor(c.atk)}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:#4cc9f0;font-size:18px;font-weight:bold;">${c.skill.icon}</div>
+          <div style="font-size:11px;color:#aaa;">${c.skill.name}</div>
+        </div>
+      </div>
+      `;
+    });
+
+    group += `</div>`;
+    dexContainer.innerHTML += group;
+  });
+
+}
+
+// ======================
+// Utils
+// ======================
+
+function save(){
+  localStorage.setItem(
+    "life_rpg",
+    JSON.stringify(state)
+  );
+}
+
+function wait(ms){
+  return new Promise(r=>setTimeout(r,ms));
+}
+
+function rand(arr){
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function getTodayDateKey(){
+  return new Date().toISOString().split('T')[0];
+}
+
+function checkDailyMissions(){
+
+  let today = getTodayDateKey();
+
+  if(state.dailyMissionsDate !== today){
+    state.dailyMissionsDate = today;
+    state.dailyMissionsCompleted = [];
+  }
+
+  DAILY_MISSIONS.forEach(m=>{
+
+    if(state.dailyMissionsCompleted.includes(m.id)){
+      return;
+    }
+
+    let completed = false;
+
+    if(m.type === "tasks") completed = state.tasksCompleted >= m.target;
+    if(m.type === "level") completed = state.level >= m.target;
+    if(m.type === "gold") completed = state.goldEarned >= m.target;
+    if(m.type === "bosses") completed = state.bossesDefeated >= m.target;
+    if(m.type === "combo") completed = state.maxCombo >= m.target;
+
+    if(completed){
+
+      state.dailyMissionsCompleted.push(m.id);
+
+      state.gachaCoins += m.reward.coin;
+      state.gold += m.reward.gold;
+
+      alert(
+        `🇦 デイリーミッション達成！
+
+${m.name}
+${m.desc}
+
+報酬：ガチャコイン+${m.reward.coin}
+ゴールド+${m.reward.gold}`
+      );
+
+    }
+
+  });
+
+}
+
+// ======================
+// マイルストーン
+// ======================
+
+function checkMilestones(){
+
+  MILESTONES.forEach(m=>{
+
+    if(state.milestonesCompleted.includes(m.id)){
+      return;
+    }
+
+    let completed = false;
+
+    if(m.type === "tasks") completed = state.tasksCompleted >= m.count;
+    if(m.type === "level") completed = state.level >= m.count;
+    if(m.type === "combo") completed = state.maxCombo >= m.count;
+    if(m.type === "bosses") completed = state.bossesDefeated >= m.count;
+
+    if(completed){
+
+      state.milestonesCompleted.push(m.id);
+
+      state.gachaCoins += m.reward.coin;
+      state.gold += m.reward.gold;
+
+      alert(
+        `🎁 マイルストーン達成！
+
+${m.name}
+${m.desc}
+
+報酬：ガチャコイン+${m.reward.coin}
+ゴールド+${m.reward.gold}`
+      );
+
+    }
+
+  });
+
+}
+
+// ======================
+// ショップ
+// ======================
+
+function buyShopItem(itemId){
+
+  let item = SHOP_ITEMS.find(i=>i.id===itemId);
+
+  if(!item) return;
+
+  if(state.gold < item.price){
+    alert("ゴールド不足");
+    return;
+  }
+
+  state.gold -= item.price;
+
+  if(item.reward.coin) state.gachaCoins += item.reward.coin;
+  if(item.reward.exp) state.exp += item.reward.exp;
+  if(item.reward.gold) state.gold += item.reward.gold;
+
+  alert(`購入成功！
+\n${item.name}
+を手に入れた！`);
+
+  save();
+  render();
+
+}
+
+function openShop(){
+  shopOverlay.style.display = "flex";
+}
+
+function closeShop(){
+  shopOverlay.style.display = "none";
+}
+
+// ======================
+// 属性
+// ======================
+
+function getElementMultiplier(a,b){
+
+  if(a==="red" && b==="green") return 1.5;
+  if(a==="green" && b==="blue") return 1.5;
+  if(a==="blue" && b==="red") return 1.5;
+
+  if(a==="green" && b==="red") return 0.7;
+  if(a==="blue" && b==="green") return 0.7;
+  if(a==="red" && b==="blue") return 0.7;
+
+  return 1;
+}
+
+// ======================
+// ボス
+// ======================
+
+function getTodayBossElement(){
+
+  let day = Math.floor(Date.now()/86400000);
+
+  let loop = ["red","blue"];
+
+  return loop[day % loop.length];
+}
+
+function getDifficultyMultiplier(){
+  let diff = state.boss.difficulty || "normal";
+  if(diff === "easy") return 0.6;
+  if(diff === "normal") return 1;
+  if(diff === "hard") return 1.5;
+  return 1;
+}
+
+function spawnBoss(){
+
+  let mult = getDifficultyMultiplier();
+
+  let hp = Math.floor((100 + (state.level * 50)) * mult);
+
+  state.boss = {
+    hp,
+    maxHp:hp,
+    element:getTodayBossElement(),
+    phase:1,
+    difficulty:state.boss.difficulty || "normal"
+  };
+
+}
+
+function updateBossPhase(){
+
+  let rate =
+  state.boss.hp /
+  state.boss.maxHp;
+
+  let phase = 1;
+
+  if(rate <= .6) phase = 2;
+  if(rate <= .3) phase = 3;
+
+  if(phase !== state.boss.phase){
+
+    state.boss.phase = phase;
+
+    document.body.style.animation =
+    "screenShake .3s";
+
+    setTimeout(()=>{
+      document.body.style.animation = "";
+    },300);
+
+  }
+
+}
+
+function defeatBoss(){
+
+  state.gachaCoins++;
+
+  state.bossesDefeated++;
+
+  alert("ボス撃破！ガチャコイン+1");
+
+  checkMilestones();
+  checkDailyMissions();
+
+  spawnBoss();
+
+}
+
+// ======================
+// タスク
+// ======================
+
+function addTask(){
+
+  let text = taskInput.value.trim();
+
+  if(!text) return;
+
+  state.tasks.push({
+    text,
+    weight:Number(taskWeight.value),
+    done:false
+  });
+
+  taskInput.value = "";
+
+  save();
+  render();
+
+}
+
+async function completeTask(index){
+
+  let task = state.tasks[index];
+
+  if(task.done) return;
+
+  task.done = true;
+
+  state.tasksCompleted++;
+
+  state.combo++;
+
+  if(state.combo > state.maxCombo){
+    state.maxCombo = state.combo;
+  }
+
+  // フィーバー
+  if(state.combo >= 10 || task.weight >= 5){
+    startFever();
+  }
+
+  // 基礎報酬
+  let expGain = 10 * task.weight;
+  let goldGain = 5 * task.weight;
+  let dmg = 15 * task.weight;
+
+  // 難易度倍率
+  let diffMultiplier = getDifficultyMultiplier();
+  expGain *= diffMultiplier;
+  goldGain *= diffMultiplier;
+  dmg *= diffMultiplier;
+
+  // パーティ効果
+  state.party.forEach(c=>{
+
+    let mult =
+    getElementMultiplier(
+      c.element,
+      state.boss.element
+    );
+
+    let final = c.atk * mult;
+
+    // ロール
+    if(c.role === "support"){
+      dmg *= 1.1;
+    }
+
+    if(c.role === "tank"){
+      final *= 0.8;
+      goldGain *= 1.2;
+    }
+
+    if(c.role === "attacker"){
+      final *= 1.2;
+    }
+
+    dmg += final;
+
+  });
+
+  // チーム相性ボーナス
+  let synergyBonus = calculateTeamSynergy() / 100;
+  dmg *= (1 + synergyBonus);
+  expGain *= (1 + synergyBonus);
+  goldGain *= (1 + synergyBonus);
+
+  // フィーバー
+  if(state.fever.active){
+    dmg *= 2;
+    expGain *= 2;
+    goldGain *= 2;
+  }
+
+  // 演出
+  await animateAttack();
+
+  // 適用
+  state.exp += Math.floor(expGain);
+  state.gold += Math.floor(goldGain);
+
+  state.goldEarned += Math.floor(goldGain);
+
+  state.boss.hp -= Math.floor(dmg);
+
+  showDamage(
+    Math.floor(dmg)
+  );
+
+  // レベル
+  while(state.exp >= EXP_PER_LEVEL){
+
+    state.exp -= EXP_PER_LEVEL;
+
+    state.level++;
+
+    alert(
+      `レベルアップ！ Lv${state.level}`
+    );
+
+  }
+
+  // ボス
+  if(state.boss.hp <= 0){
+    defeatBoss();
+  }
+
+  updateBossPhase();
+
+  checkMilestones();
+  checkDailyMissions();
+
+  save();
+  render();
+
+}
+
+// ======================
+// フィーバー
+// ======================
+
+function startFever(){
+
+  state.fever.active = true;
+
+  state.fever.end =
+  Date.now() + 30000;
+
+  document.body.classList.add("fever");
+
+}
+
+function updateFever(){
+
+  if(
+    state.fever.active &&
+    Date.now() > state.fever.end
+  ){
+
+    state.fever.active = false;
+
+    document.body.classList.remove("fever");
+
+  }
+
+}
+
+// ======================
+// 放置
+// ======================
+
+function applyOfflineProgress(){
+
+  let now = Date.now();
+
+  let diff =
+  Math.min(
+    now - state.lastLogin,
+    state.offlineMax
+  );
+
+  let sec = Math.floor(diff / 1000);
+
+  let dps = 0;
+
+  state.party.forEach(c=>{
+    dps += c.atk;
+  });
+
+  let damage =
+  Math.floor(dps * sec / 5);
+
+  let gold =
+  Math.floor(sec * .5);
+
+  state.gold += gold;
+
+  state.boss.hp -= damage;
+
+  state.lastLogin = now;
+
+  if(state.boss.hp <= 0){
+    defeatBoss();
+  }
+
+  alert(
+`放置報酬
+
+ダメージ:
+${damage}
+
+Gold:
+${gold}`
+  );
+
+  checkMilestones();
+  checkDailyMissions();
+
+  save();
+  render();
+
+}
+
+// ======================
+// ボス難易度
+// ======================
+
+function changeDifficulty(level){
+
+  state.boss.difficulty = level;
+
+  spawnBoss();
+
+  save();
+  render();
+
+}
+
+// ======================
+// モンスター育成
+// ======================
+
+function levelUpMonster(rarity, index){
+
+  let companion = state.companions[index];
+
+  if(!companion || companion.rarity !== rarity){
+    alert("モンスターを選択してください");
+    return;
+  }
+
+  let needed = rarity === "SSR" ? 3 : (rarity === "SR" ? 2 : 1);
+
+  if(!state.materials[rarity] || state.materials[rarity] < needed){
+    alert(`${rarity} 素材が不足しています！
+
+必要：${needed}個
+所持：${state.materials[rarity] || 0}個`);
+    return;
+  }
+
+  state.materials[rarity] -= needed;
+  companion.level++;
+  let oldAtk = companion.atk;
+  companion.atk = Math.floor(companion.atk * 1.15);
+
+  alert(`
+素材を消費して
+
+${companion.name}
+を Lv${companion.level} に上げました！
+
+ATK: ${Math.floor(oldAtk)} → ${companion.atk}`);
+
+  save();
+  render();
+
+}
+
+// ======================
+// ガチャ
+// ======================
+
+function getRarity(){
+
+  let roll = Math.random() * 100;
+
+  let sum = 0;
+
+  for(let r of RARITY){
+
+    sum += r.rate;
+
+    if(roll <= sum){
+      return r;
+    }
+
+  }
+
+}
+
+function createMonster(r){
+
+  let el = rand(ELEMENTS);
+
+  let role = rand(ROLES);
+
+  let skill = rand(SKILLS);
+
+  return {
+
+    name:
+    `${r.name} ${rand(MONSTER_NAMES)}`,
+
+    rarity:r.name,
+
+    color:r.color,
+
+    atk:
+    Math.floor(
+      (Math.random()*5 + 3)
+      * r.multi
+    ),
+
+    level:1,
+
+    element:el.id,
+
+    elementIcon:el.icon,
+
+    role:role.id,
+
+    roleIcon:role.icon,
+
+    roleName:role.name,
+
+    skill:skill
+
+  };
+
+}
+
+async function runGacha(){
+
+  if(state.gachaCoins <= 0){
+    alert("コイン不足");
+    return;
+  }
+
+  state.gachaCoins--;
+
+  let results = [];
+
+  for(let i=0;i<10;i++){
+
+    let rarity = getRarity();
+
+    let monster =
+    createMonster(rarity);
+
+    results.push(monster);
+
+    state.companions.push(monster);
+
+    // 素材取得
+    if(!state.materials[rarity.name]){
+      state.materials[rarity.name] = 0;
+    }
+    state.materials[rarity.name]++;
+
+  }
+
+  await playGachaAnimation(results);
+
+  save();
+  render();
+
+}
+
+async function playGachaAnimation(results){
+
+  gachaOverlay.style.display = "flex";
+
+  gachaCards.innerHTML = "";
+
+  let hasSSR =
+  results.some(r=>r.rarity==="SSR");
+
+  if(hasSSR){
+    await ssrRainbowEffect();
+  }else{
+    await wait(300);
+  }
+
+  for(let r of results){
+
+    if(r.rarity==="SSR"){
+      await showCutin();
+    }
+
+    let card = createCard(r);
+
+    gachaCards.appendChild(card);
+
+    await wait(120);
+
+  }
+
+}
+
+function createCard(c){
+
+  let div =
+  document.createElement("div");
+
+  div.className = "card";
+
+  div.style.border =
+  `3px solid ${c.color}`;
+
+  div.innerHTML = `
+
+  <div
+  class="rarity"
+  style="color:${c.color}">
+  ${c.rarity}
+  </div>
+
+  <div style="margin:5px 0;">
+  ${c.name}
+  </div>
+
+  <div class="element">
+  ${c.elementIcon}
+  </div>
+
+  <div class="role">
+  ${c.roleIcon}
+  ${c.roleName}
+  </div>
+
+  <div style="margin-top:5px;">
+  ATK ${Math.floor(c.atk)}
+  </div>
+
+  <div style="margin-top:8px;padding:6px;background:#0f3460;border-radius:6px;font-size:12px;">
+  <div style="color:#facc15;font-weight:bold;">${c.skill.icon} ${c.skill.name}</div>
+  <div style="font-size:11px;color:#aaa;margin-top:3px;">${c.skill.desc}</div>
+  </div>
+
+  `;
+
+  return div;
+
+}
+
+function closeGacha(){
+  gachaOverlay.style.display = "none";
+}
+
+// ======================
+// SSR演出
+// ======================
+
+async function ssrRainbowEffect(){
+
+  let overlay =
+  document.createElement("div");
+
+  overlay.style = `
+  position:fixed;
+  inset:0;
+  background:black;
+  z-index:9999;
+  `;
+
+  document.body.appendChild(overlay);
+
+  await wait(300);
+
+  document.body.style.animation =
+  "screenShake .3s";
+
+  await wait(300);
+
+  overlay.style.background = "white";
+
+  await wait(100);
+
+  overlay.style.background = "linear-gradient(45deg,red,orange,yellow,green,blue,purple)";
+
+  await wait(600);
+
+  overlay.style.background = "white";
+
+  await wait(150);
+
+  overlay.remove();
+
+  document.body.style.animation = "";
+
+}
+
+async function showCutin(){
+
+  cutin.style.display = "flex";
+
+  await wait(900);
+
+  cutin.style.display = "none";
+
+}
+
+// ======================
+// 編成
+// ======================
+
+function addParty(index){
+
+  if(state.party.length >= MAX_PARTY){
+
+    alert("編成上限");
+
+    return;
+
+  }
+
+  state.party.push(
+    state.companions[index]
+  );
+
+  save();
+  render();
+
+}
+
+// ======================
+// 演出
+// ======================
+
+function showDamage(dmg){
+
+  let el =
+  document.createElement("div");
+
+  el.className = "damage";
+
+  el.innerText =
+  "-" + Math.floor(dmg);
+
+  document.body.appendChild(el);
+
+  setTimeout(()=>{
+    el.remove();
+  },800);
+
+}
+
+function animateAttack(){
+
+  return new Promise(res=>{
+
+    bossBar.style.transform =
+    "scale(1.03)";
+
+    setTimeout(()=>{
+
+      bossBar.style.transform =
+      "scale(1)";
+
+      res();
+
+    },250);
+
+  });
+
+}
+
+// ======================
+// Render
+// ======================
+
+function render(){
+
+  updateFever();
+
+  // ステータス
+  checkLoginBonus();
+  
+  levelText.innerText =
+  state.level;
+  
+  loginStreakText.innerText = state.loginStreak + "日";
+
+  expText.innerText =
+  state.exp;
+
+  goldText.innerText =
+  state.gold;
+
+  comboStat.innerText =
+  state.combo;
+
+  coinText.innerText =
+  state.gachaCoins;
+
+  expBar.style.width =
+  (state.exp / EXP_PER_LEVEL * 100)
+  + "%";
+
+  // ボス
+  let elementIcon =
+  ELEMENTS.find(
+    e=>e.id===state.boss.element
+  )?.icon || "❓";
+
+  bossInfo.innerHTML = `
+  ボス属性:
+  ${elementIcon}
+
+  Phase:
+  ${state.boss.phase}
+  `;
+
+  // 期間限定ボス表示
+  let limitedBoss = getLimitedBoss();
+  document.getElementById('limitedBossInfo').innerHTML = `
+  ${limitedBoss.icon} ${limitedBoss.name}
+  `;
+
+  bossDesc.innerHTML = `
+  HP:
+  ${Math.floor(state.boss.hp)}
+  /
+  ${state.boss.maxHp}
+  `;
+
+  bossBar.style.width =
+  Math.max(
+    0,
+    state.boss.hp /
+    state.boss.maxHp * 100
+  ) + "%";
+
+  // チーム相性ボーナス表示
+  calculateTeamSynergy();
+  document.getElementById('synergyDisplay').innerText = `+${state.teamBonus}%`;
+  document.getElementById('synergyBarInner').style.width = state.teamBonus + "%";
+
+  // コンボ
+  comboText.innerText =
+  state.combo >= 2
+  ? `${state.combo} COMBO!`
+  : "";
+
+  // タスク
+  taskList.innerHTML = "";
+
+  state.tasks.forEach((t,i)=>{
+
+    let div =
+    document.createElement("div");
+
+    div.className =
+    `task ${t.done ? "done":""}`;
+
+    div.onclick =
+    ()=>completeTask(i);
+
+    div.innerHTML = `
+
+    <div>
+    ${t.text}
+    </div>
+
+    <div class="
+    weight
+    w${t.weight}">
+    ×${t.weight}
+    </div>
+
+    `;
+
+    taskList.appendChild(div);
+
+  });
+
+  // 編成
+  partyArea.innerHTML = "";
+
+  state.party.forEach(c=>{
+
+    let div =
+    document.createElement("div");
+
+    div.className = "card";
+
+    div.style.border =
+    `3px solid ${c.color}`;
+
+    div.innerHTML = `
+
+    <div
+    class="rarity"
+    style="color:${c.color}">
+    ${c.rarity}
+    </div>
+
+    <div>${c.name}</div>
+
+    <div class="element">
+    ${c.elementIcon}
+    </div>
+
+    <div class="role">
+    ${c.roleIcon}
+    ${c.roleName}
+    </div>
+
+    <div>
+    ATK:
+    ${Math.floor(c.atk)}
+    </div>
+
+    <div style="margin-top:8px;padding:6px;background:#0f3460;border-radius:6px;font-size:12px;">
+    <div style="color:#facc15;font-weight:bold;">${c.skill.icon} ${c.skill.name}</div>
+    </div>
+
+    `;
+
+    partyArea.appendChild(div);
+
+  });
+
+  // モンスター
+  let monsterList = document.getElementById('monsterList');
+  if(monsterList){
+    monsterList.innerHTML = "";
+    state.companions.forEach((c,i)=>{
+      let div =
+      document.createElement("div");
+      div.className = "card";
+      div.style.border =
+      `3px solid ${c.color}`;
+      div.innerHTML = `
+
+      <div
+      class="rarity"
+      style="color:${c.color}">
+      ${c.rarity}
+      </div>
+
+      <div>${c.name}</div>
+
+      <div class="element">
+      ${c.elementIcon}
+      </div>
+
+      <div class="role">
+      ${c.roleIcon}
+      ${c.roleName}
+      </div>
+
+      <div>
+      ATK:
+      ${Math.floor(c.atk)}
+      </div>
+
+      <div style="margin-top:8px;padding:6px;background:#0f3460;border-radius:6px;font-size:12px;">
+      <div style="color:#facc15;font-weight:bold;">${c.skill.icon} ${c.skill.name}</div>
+      <div style="font-size:11px;color:#aaa;margin-top:2px;">${c.skill.desc}</div>
+      </div>
+
+      <button onclick="addParty(${i})">
+      編成
+      </button>
+
+      `;
+
+      monsterList.appendChild(div);
+    });
+  }
+
+  // 図鑑更新
+  renderDex();
+
+  // ログインボーナスカレンダー表示
+  let loginBonusDisplay = document.getElementById('loginBonusDisplay');
+  if(loginBonusDisplay){
+    loginBonusDisplay.innerHTML = '';
+    for(let i=1;i<=7;i++){
+      let isCompleted = state.loginStreak >= i;
+      let isToday = state.loginStreak === i;
+      let dayDiv = document.createElement('div');
+      dayDiv.className = `loginDay ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''}`;
+      dayDiv.innerHTML = `
+        <div style="font-weight:bold;margin-bottom:4px;">Day${i}</div>
+        <div style="color:#4cc9f0;">+${Math.floor(i/7)+1}<br/>🪙</div>
+      `;
+      loginBonusDisplay.appendChild(dayDiv);
+    }
+  }
+
+  // マイルストーン
+  milestoneList.innerHTML = "";
+
+  MILESTONES.forEach(m=>{
+
+    let isCompleted = 
+    state.milestonesCompleted.includes(m.id);
+
+    let progress = 0;
+
+    if(m.type === "tasks") 
+      progress = state.tasksCompleted;
+    if(m.type === "level") 
+      progress = state.level;
+    if(m.type === "combo") 
+      progress = state.maxCombo;
+    if(m.type === "bosses") 
+      progress = state.bossesDefeated;
+
+    let div = document.createElement("div");
+
+    div.style = isCompleted 
+      ? "opacity:.5;text-decoration:line-through;"
+      : "";
+
+    div.innerHTML = `
+    <div ${isCompleted ? 'style="color:#4cc9f0"' : ''}>
+      ${isCompleted ? "✅" : "⬜"} ${m.name}
+    </div>
+    <small>${m.desc}</small>
+    <div style="margin-top:4px;">
+      進度: ${progress}/${m.count}
+      <div class="bar" style="margin-top:4px;">
+        <div class="barInner expBar" 
+          style="width:${Math.min(100, progress/m.count*100)}%">
+        </div>
+      </div>
+    </div>
+    `;
+
+    milestoneList.appendChild(div);
+
+  });
+
+  // ショップ
+  let shopItems = document.getElementById('shopItems');
+  if(shopItems){
+    shopItems.innerHTML = "";
+
+    SHOP_ITEMS.forEach(item=>{
+
+      let div = document.createElement("div");
+
+      div.style = `
+        background:#111827;
+        border:2px solid #4cc9f0;
+        border-radius:8px;
+        padding:10px;
+        text-align:center;
+        cursor:pointer;
+        transition:.2s;
+      `;
+
+      let canBuy = state.gold >= item.price;
+
+      div.style.opacity = canBuy ? "1" : "0.6";
+
+      div.innerHTML = `
+        <div style="font-size:28px;">${item.icon}</div>
+        <div style="margin:8px 0;font-weight:bold;">${item.name}</div>
+        <div style="color:gold;font-size:14px;">💰 ${item.price}</div>
+        <button onclick="buyShopItem(${item.id})" 
+          ${canBuy ? "" : "disabled"} 
+          style="width:100%;margin-top:8px;">
+          購入
+        </button>
+      `;
+
+      div.onmouseover = ()=>{ div.style.transform = "scale(1.05)"; };
+      div.onmouseout = ()=>{ div.style.transform = "scale(1)"; };
+
+      shopItems.appendChild(div);
+
+    });
+  }
+
+  // デイリーミッション
+  dailyList.innerHTML = "";
+
+  let today = getTodayDateKey();
+
+  DAILY_MISSIONS.forEach(m=>{
+
+    let isCompleted = 
+    state.dailyMissionsCompleted.includes(m.id);
+
+    let progress = 0;
+
+    if(m.type === "tasks") 
+      progress = state.tasksCompleted;
+    if(m.type === "level") 
+      progress = Math.min(state.level, m.target);
+    if(m.type === "gold") 
+      progress = state.goldEarned;
+    if(m.type === "bosses") 
+      progress = state.bossesDefeated;
+    if(m.type === "combo") 
+      progress = state.maxCombo;
+
+    let div = document.createElement("div");
+
+    div.style = isCompleted 
+      ? "opacity:.5;"
+      : "";
+
+    div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div>
+        ${isCompleted ? "✅" : "⭕"} ${m.name}
+      </div>
+      <div style="color:#4cc9f0;font-weight:bold;">${progress}/${m.target}</div>
+    </div>
+    <small>${m.desc}</small>
+    <div class="bar" style="margin-top:6px;">
+      <div class="barInner expBar" 
+        style="width:${Math.min(100, progress/m.target*100)}%">
+      </div>
+    </div>
+    `;
+
+    dailyList.appendChild(div);
+
+  });
+
+}
+
+// ======================
+// 起動
+// ======================
+
+if(!state.boss.maxHp){
+  spawnBoss();
+}
+
+// 初期ログインチェック
+checkLoginBonus();
+
+render();
+
+</script>
+
+</body>
+</html>
+```
