@@ -1,4 +1,4 @@
-```html
+```ver2
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -247,6 +247,9 @@ input,select{
   justify-content:center;
   align-items:center;
   z-index:4000;
+  overflow-y:auto;
+  padding:20px;
+  max-height:100vh;
 }
 
 #gachaCards{
@@ -413,6 +416,76 @@ input,select{
 .loginDay.today{
   border-color:#facc15;
   background:#3a3a1a;
+}
+
+/* キャラ育成UI */
+.evolutionBtn{
+  background:#a855f7;
+  padding:6px 12px;
+  font-size:12px;
+  margin:4px 2px;
+}
+
+.skillEnhanceBtn{
+  background:#06b6d4;
+  padding:6px 12px;
+  font-size:12px;
+  margin:4px 2px;
+}
+
+.leaderBadge{
+  background:#facc15;
+  color:#000;
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:11px;
+  font-weight:bold;
+  margin-top:4px;
+}
+
+/* 統計画面 */
+.statBox{
+  background:#0f3460;
+  border:2px solid #4cc9f0;
+  border-radius:8px;
+  padding:12px;
+  text-align:center;
+  margin-bottom:8px;
+}
+
+.statValue{
+  font-size:24px;
+  color:#06b6d4;
+  font-weight:bold;
+}
+
+.statLabel{
+  font-size:12px;
+  color:#aaa;
+}
+
+/* ボス分析 */
+.bossAnalysis{
+  background:#1a3a52;
+  border:2px solid #4cc9f0;
+  border-radius:8px;
+  padding:12px;
+  margin:10px 0;
+}
+
+.recommendedParty{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:8px;
+}
+
+.recommendCard{
+  background:#0f3460;
+  border-radius:6px;
+  padding:6px;
+  text-align:center;
+  font-size:12px;
 }
 </style>
 </head>
@@ -587,7 +660,10 @@ SSRは特別演出あり。
 <!-- タブシステム -->
 <div class="tabContainer">
 <button class="tabBtn active" onclick="switchTab('party')">⚔️ 編成</button>
+<button class="tabBtn" onclick="switchTab('training')">📈 育成</button>
 <button class="tabBtn" onclick="switchTab('dex')">📚 図鑑</button>
+<button class="tabBtn" onclick="switchTab('stats')">🏆 統計</button>
+<button class="tabBtn" onclick="switchTab('boss')">🐉 ボス分析</button>
 <button class="tabBtn" onclick="switchTab('missions')">🎯 ミッション</button>
 <button class="tabBtn" onclick="switchTab('settings')">⚙️ 設定</button>
 </div>
@@ -610,6 +686,30 @@ SSRは特別演出あり。
 <div class="panel">
 <h3>📚 モンスター図鑑</h3>
 <div id="dexContainer"></div>
+</div>
+</div>
+
+<!-- 育成タブ -->
+<div id="training-tab" class="tabContent">
+<div class="panel">
+<h3>📈 キャラクター育成</h3>
+<div id="trainingContainer"></div>
+</div>
+</div>
+
+<!-- 統計タブ -->
+<div id="stats-tab" class="tabContent">
+<div class="panel">
+<h3>🏆 統計情報</h3>
+<div id="statsContainer"></div>
+</div>
+</div>
+
+<!-- ボス分析タブ -->
+<div id="boss-tab" class="tabContent">
+<div class="panel">
+<h3>🐉 ボス分析</h3>
+<div id="bossAnalysisContainer"></div>
 </div>
 </div>
 
@@ -953,6 +1053,15 @@ function switchTab(tabName){
   // 対応するボタンをアクティブ化
   event.target.classList.add('active');
 
+  // タブ別の処理を実行
+  if(tabName === 'training'){
+    renderTraining();
+  } else if(tabName === 'stats'){
+    renderStats();
+  } else if(tabName === 'boss'){
+    renderBossAnalysis();
+  }
+
 }
 
 // ======================
@@ -1037,8 +1146,210 @@ function renderDex(){
 }
 
 // ======================
+// 育成システム
+// ======================
+
+function evolveMonster(index){
+
+  let companion = state.companions[index];
+  if(!companion) return;
+
+  let needed = 5;
+  if(!state.materials[companion.rarity] || state.materials[companion.rarity] < needed){
+    alert(`${companion.rarity} 素材が不足しています！\n必要：${needed}個\n所持：${state.materials[companion.rarity] || 0}個`);
+    return;
+  }
+
+  state.materials[companion.rarity] -= needed;
+  companion.evolutionLevel = (companion.evolutionLevel || 0) + 1;
+  let oldAtk = companion.atk;
+  companion.atk = Math.floor(companion.atk * 1.25);
+
+  alert(`${companion.name} が進化しました！\n進化Lv${companion.evolutionLevel}\nATK: ${Math.floor(oldAtk)} → ${companion.atk}`);
+
+  save();
+  render();
+
+}
+
+function enhanceSkill(index){
+
+  let companion = state.companions[index];
+  if(!companion) return;
+
+  let needed = 3;
+  if(!state.materials[companion.rarity] || state.materials[companion.rarity] < needed){
+    alert(`${companion.rarity} 素材が不足しています！\n必要：${needed}個\n所持：${state.materials[companion.rarity] || 0}個`);
+    return;
+  }
+
+  state.materials[companion.rarity] -= needed;
+  companion.skillEnhance = (companion.skillEnhance || 0) + 1;
+
+  alert(`${companion.name} のスキルを強化しました！\nレベル：${companion.skillEnhance}`);
+
+  save();
+  render();
+
+}
+
+function setLeader(index){
+
+  state.companions.forEach(c => c.isLeader = false);
+  state.companions[index].isLeader = true;
+
+  alert(`${state.companions[index].name} をリーダーに設定しました！`);
+
+  save();
+  render();
+
+}
+
+// ======================
+// 統計画面
+// ======================
+
+function renderStats(){
+
+  let statsContainer = document.getElementById('statsContainer');
+  if(!statsContainer) return;
+
+  let totalDamage = state.gachaCoins * 1000;
+  let avgDamage = state.bossesDefeated > 0 ? Math.floor(totalDamage / state.bossesDefeated) : 0;
+
+  let html = `
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px;">
+    <div class="statBox">
+      <div class="statLabel">総ダメージ</div>
+      <div class="statValue">${totalDamage.toLocaleString()}</div>
+    </div>
+    <div class="statBox">
+      <div class="statLabel">ボス撃破</div>
+      <div class="statValue">${state.bossesDefeated}</div>
+    </div>
+    <div class="statBox">
+      <div class="statLabel">平均ダメージ</div>
+      <div class="statValue">${avgDamage.toLocaleString()}</div>
+    </div>
+    <div class="statBox">
+      <div class="statLabel">最大コンボ</div>
+      <div class="statValue">${state.maxCombo}</div>
+    </div>
+    <div class="statBox">
+      <div class="statLabel">タスク達成</div>
+      <div class="statValue">${state.tasksCompleted}</div>
+    </div>
+    <div class="statBox">
+      <div class="statLabel">総ゴールド</div>
+      <div class="statValue">${state.gold.toLocaleString()}</div>
+    </div>
+  </div>
+  `;
+
+  statsContainer.innerHTML = html;
+
+}
+
+// ======================
+// ボス分析画面
+// ======================
+
+function renderBossAnalysis(){
+
+  let container = document.getElementById('bossAnalysisContainer');
+  if(!container) return;
+
+  let limitedBoss = getLimitedBoss();
+  let recommendations = [];
+
+  if(limitedBoss.element === "red"){
+    recommendations = ["🌿 グリーンタイプ推奨", "💧 ウォータータイプもOK"];
+  } else if(limitedBoss.element === "blue"){
+    recommendations = ["🔥 ファイアタイプ推奨", "🌿 グリーンタイプもOK"];
+  } else {
+    recommendations = ["💧 ウォータータイプ推奨", "🔥 ファイアタイプもOK"];
+  }
+
+  let html = `
+  <div class="bossAnalysis">
+    <div style="font-size:18px;font-weight:bold;margin-bottom:8px;">
+      ${limitedBoss.icon} ${limitedBoss.name}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;">
+      <div class="statBox" style="margin-bottom:0;">
+        <div class="statLabel">難度</div>
+        <div class="statValue">${(limitedBoss.difficulty * 100).toFixed(0)}%</div>
+      </div>
+      <div class="statBox" style="margin-bottom:0;">
+        <div class="statLabel">推奨Lv</div>
+        <div class="statValue">${Math.ceil(limitedBoss.difficulty * 20)}</div>
+      </div>
+    </div>
+    
+    <div style="color:#4cc9f0;font-weight:bold;margin-bottom:8px;">推奨属性</div>
+    <div class="recommendedParty">
+      ${recommendations.map(rec => `<div class="recommendCard">${rec}</div>`).join('')}
+    </div>
+    
+    <div style="margin-top:12px;color:#aaa;font-size:12px;">
+      💡 ${state.party.length === 0 ? "パーティを編成してボスに挑戦しましょう！" : "現在のパーティでボスに挑戦できます！"}
+    </div>
+  </div>
+  `;
+
+  container.innerHTML = html;
+
+}
+
+// ======================
+// 育成画面表示
+// ======================
+
+function renderTraining(){
+
+  let trainingContainer = document.getElementById('trainingContainer');
+  if(!trainingContainer) return;
+
+  let html = '';
+
+  state.companions.forEach((c, i) => {
+    let evolutionProgress = (c.evolutionLevel || 0);
+    let skillEnhanceLevel = (c.skillEnhance || 0);
+
+    html += `
+    <div style="background:#0f3460;border-radius:8px;padding:10px;margin-bottom:10px;border:2px solid ${c.color};">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div>
+          <div style="font-weight:bold;color:${c.color};">${c.name}</div>
+          <div style="font-size:12px;color:#aaa;">Lv${c.level} / 進化${evolutionProgress}</div>
+        </div>
+        ${c.isLeader ? '<div class="leaderBadge">🌟 リーダー</div>' : ''}
+      </div>
+      
+      <div style="font-size:12px;color:#aaa;margin-bottom:6px;">
+        スキル：${c.skill.name} (強化Lv${skillEnhanceLevel})
+      </div>
+      
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="evolutionBtn" onclick="evolveMonster(${i})">進化 (×5素材)</button>
+        <button class="skillEnhanceBtn" onclick="enhanceSkill(${i})">スキル強化 (×3素材)</button>
+        <button onclick="setLeader(${i})" style="background:#facc15;color:#000;padding:6px 12px;font-size:12px;margin:4px 2px;font-weight:bold;">リーダー設定</button>
+      </div>
+    </div>
+    `;
+  });
+
+  if(state.companions.length === 0){
+    html = '<div style="text-align:center;color:#aaa;padding:20px;">モンスターをガチャで入手してください</div>';
+  }
+
+  trainingContainer.innerHTML = html;
+
+// ======================
 // Utils
 // ======================
+
+}
 
 function save(){
   localStorage.setItem(
@@ -1303,6 +1614,21 @@ function addTask(){
 
 }
 
+function moveTask(index, direction){
+
+  if(direction === 'up' && index > 0){
+    [state.tasks[index], state.tasks[index-1]] = [state.tasks[index-1], state.tasks[index]];
+  }
+
+  if(direction === 'down' && index < state.tasks.length - 1){
+    [state.tasks[index], state.tasks[index+1]] = [state.tasks[index+1], state.tasks[index]];
+  }
+
+  save();
+  render();
+
+}
+
 async function completeTask(index){
 
   let task = state.tasks[index];
@@ -1369,6 +1695,33 @@ async function completeTask(index){
   dmg *= (1 + synergyBonus);
   expGain *= (1 + synergyBonus);
   goldGain *= (1 + synergyBonus);
+
+  // リーダースキル発動
+  let leader = state.party.find(c => c.isLeader);
+  if(leader){
+    // リーダーは各ステータスに +10% ボーナス
+    dmg *= 1.1;
+    expGain *= 1.1;
+    goldGain *= 1.1;
+  }
+
+  // スキル発動（10%の確率）
+  let skillTriggered = false;
+  if(state.party.length > 0 && Math.random() < 0.1){
+    skillTriggered = true;
+    let activeSkill = state.party[Math.floor(Math.random() * state.party.length)].skill;
+    
+    // スキル効果
+    if(activeSkill.id === 1){ // 火力を強化
+      dmg *= 1.3;
+    } else if(activeSkill.id === 3){ // 回復
+      goldGain *= 1.2;
+    } else if(activeSkill.id === 4){ // 連撃
+      dmg *= 1.5;
+    } else if(activeSkill.id === 5){ // 幸運
+      state.gachaCoins += 1;
+    }
+  }
 
   // フィーバー
   if(state.fever.active){
@@ -1619,7 +1972,12 @@ function createMonster(r){
 
     roleName:role.name,
 
-    skill:skill
+    skill:skill,
+
+    // 新しいプロパティ
+    evolutionLevel:0,
+    skillEnhance:0,
+    isLeader:false
 
   };
 
@@ -1810,6 +2168,15 @@ function addParty(index){
 
   }
 
+  // 同じモンスターが既に編成されているかチェック
+  let monsterName = state.companions[index].name;
+  let isAlreadyInParty = state.party.some(c => c.name === monsterName);
+
+  if(isAlreadyInParty){
+    alert("このモンスターは既に編成されています");
+    return;
+  }
+
   state.party.push(
     state.companions[index]
   );
@@ -1952,16 +2319,23 @@ function render(){
     div.onclick =
     ()=>completeTask(i);
 
+    let upBtn = i > 0 ? `<button onclick="moveTask(${i}, 'up')" style="padding:4px 8px;font-size:12px;background:#3b82f6;margin-right:4px;">▲</button>` : '';
+    let downBtn = i < state.tasks.length - 1 ? `<button onclick="moveTask(${i}, 'down')" style="padding:4px 8px;font-size:12px;background:#3b82f6;">▼</button>` : '';
+
     div.innerHTML = `
 
     <div>
     ${t.text}
     </div>
 
+    <div style="display:flex;align-items:center;gap:4px;">
+    ${upBtn}
+    ${downBtn}
     <div class="
     weight
     w${t.weight}">
     ×${t.weight}
+    </div>
     </div>
 
     `;
@@ -2219,6 +2593,18 @@ function render(){
     dailyList.appendChild(div);
 
   });
+
+  // 新規タブコンテンツの初期化
+  // 育成タブが表示されている場合のみレンダリング
+  if(document.getElementById('training-tab')?.classList.contains('active')){
+    renderTraining();
+  }
+  if(document.getElementById('stats-tab')?.classList.contains('active')){
+    renderStats();
+  }
+  if(document.getElementById('boss-tab')?.classList.contains('active')){
+    renderBossAnalysis();
+  }
 
 }
 
