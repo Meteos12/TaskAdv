@@ -1,4 +1,4 @@
-```ver2
+ver3
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -122,7 +122,7 @@ input,select{
   margin-top:8px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
+  align-items:flex-start;
   cursor:pointer;
   transition:.2s;
 }
@@ -132,10 +132,58 @@ input,select{
 }
 
 .task.done{
-  background:#444;
-  opacity:.6;
-  text-decoration:line-through;
+  background:#2b2b3d;
 }
+
+.taskMeta{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:8px;
+  font-size:12px;
+  color:#aaa;
+}
+
+.taskMeta span{
+  background:rgba(255,255,255,.08);
+  border-radius:999px;
+  padding:4px 8px;
+}
+
+.taskActions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:100px;
+}
+
+.taskActions button{
+  width:100%;
+  padding:6px 8px;
+  font-size:12px;
+  background:#1f2937;
+}
+
+.dueBadge{
+  background:#ef4444;
+  color:#fff;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:12px;
+}
+
+.categoryBadge{
+  background:#3b82f6;
+  color:#fff;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:12px;
+}
+
+.noteText{
+  color:#d1d5db;
+  margin-top:6px;
+  white-space:pre-wrap;
 
 .weight{
   padding:4px 8px;
@@ -604,18 +652,63 @@ input,select{
 
 <h3>📋 タスク</h3>
 
-<div class="flex">
+<div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:flex-end;">
+  <div>
+    <input id="taskInput" placeholder="タスク" style="width:100%;">
+    <textarea id="taskNote" placeholder="メモ (任意)" style="width:100%;margin-top:8px;min-height:60px;"></textarea>
+  </div>
+  <div style="display:grid;gap:10px;">
+    <select id="taskWeight">
+      <option value="1">軽い</option>
+      <option value="3">重要</option>
+      <option value="5">最重要</option>
+    </select>
+    <select id="taskCategory">
+      <option value="仕事">仕事</option>
+      <option value="勉強">勉強</option>
+      <option value="生活">生活</option>
+      <option value="趣味">趣味</option>
+      <option value="その他">その他</option>
+    </select>
+    <input type="date" id="taskDueDate" style="width:100%;">
+  </div>
+  <div style="display:grid;gap:10px;">
+    <button onclick="addTask()">追加</button>
+    <button onclick="resetTaskForm()" style="background:#0f3460;">クリア</button>
+  </div>
+</div>
 
-<input id="taskInput" placeholder="タスク">
-
-<select id="taskWeight">
-<option value="1">軽い</option>
-<option value="3">重要</option>
-<option value="5">最重要</option>
-</select>
-
-<button onclick="addTask()">追加</button>
-
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px;">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <label for="taskViewFilter">表示：</label>
+    <select id="taskViewFilter" onchange="render()">
+      <option value="all">すべて</option>
+      <option value="todo">未完了</option>
+      <option value="done">完了済み</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <label for="taskDueFilter">期限：</label>
+    <select id="taskDueFilter" onchange="render()">
+      <option value="all">すべて</option>
+      <option value="overdue">期限切れ</option>
+      <option value="today">今日まで</option>
+      <option value="upcoming">今後</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <label for="taskSort">並び替え：</label>
+    <select id="taskSort" onchange="render()">
+      <option value="created">追加順</option>
+      <option value="due">期限順</option>
+      <option value="weight">重要度順</option>
+      <option value="category">カテゴリー順</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <label for="taskSearch">検索：</label>
+    <input id="taskSearch" placeholder="キーワード" style="width:100%;" oninput="render()">
+  </div>
 </div>
 
 <div id="taskList"></div>
@@ -677,6 +770,37 @@ SSRは特別演出あり。
 
 <div class="panel">
 <h3>🐉 モンスター一覧</h3>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:center;margin-bottom:10px;">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <label for="monsterSort">並び替え：</label>
+    <select id="monsterSort" onchange="render()" style="min-width:130px;">
+      <option value="default">入手順</option>
+      <option value="rarity">レア度順</option>
+      <option value="atk">ATK順</option>
+      <option value="name">名前順</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <label for="monsterRarityFilter">レア度：</label>
+    <select id="monsterRarityFilter" onchange="render()" style="min-width:120px;">
+      <option value="all">すべて</option>
+      <option value="SSR">SSR</option>
+      <option value="SR">SR</option>
+      <option value="R">R</option>
+      <option value="UC">UC</option>
+      <option value="C">C</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <label for="monsterElementFilter">属性：</label>
+    <select id="monsterElementFilter" onchange="render()" style="min-width:120px;">
+      <option value="all">すべて</option>
+      <option value="red">🔥 火</option>
+      <option value="blue">💧 水</option>
+      <option value="green">🌿 風</option>
+    </select>
+  </div>
+</div>
 <div id="monsterList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;"></div>
 </div>
 </div>
@@ -766,13 +890,8 @@ SSRは特別演出あり。
 
 <!-- カットイン -->
 <div id="cutin">
-
-<img src="Akori.png">
-
-<div id="cutinText">
-「ごちそうの時間だよ♡」
-</div>
-
+  <img id="cutinImg" src="" alt="SSRカットイン">
+  <div id="cutinText"></div>
 </div>
 
 <script>
@@ -846,6 +965,35 @@ const SKILLS = [
   {id:6, name:"暴風", icon:"🌪️", desc:"敵に強力な攻撃を与える", rarity:"SR"}
 ];
 
+const SSR_CHARACTERS = [
+  {
+    name: "アコリ",
+    image: "Akori.png",
+    rarity: "SSR",
+    color: "#facc15",
+    element: "red",
+    elementIcon: "🔥",
+    role: "attacker",
+    roleName: "アタッカー",
+    roleIcon: "⚔️",
+    atk: 28,
+    skill: {id:7, name:"ごちそうの時間", icon:"🍰", desc:"敵に烈火の一撃を与え、攻撃力を30%アップ"}
+  },
+  {
+    name: "メルティア",
+    image: "Meltia.png",
+    rarity: "SSR",
+    color: "#3b82f6",
+    element: "blue",
+    elementIcon: "💧",
+    role: "support",
+    roleName: "サポーター",
+    roleIcon: "✨",
+    atk: 22,
+    skill: {id:8, name:"氷結の抱擁", icon:"🧊", desc:"味方全体のダメージを20%軽減し回復を補助"}
+  }
+];
+
 const DAILY_MISSIONS = [
   {id:1, name:"初心者ユーザー", desc:"タスク達成×1", type:"tasks", target:1, reward:{coin:1, gold:10}},
   {id:2, name:"仕事の時間", desc:"タスク達成×3", type:"tasks", target:3, reward:{coin:1, gold:30}},
@@ -871,6 +1019,7 @@ let state = JSON.parse(localStorage.getItem("life_rpg")) || {
   gachaCoins:3,
 
   tasks:[],
+  taskNextId:1,
 
   companions:[],
 
@@ -890,6 +1039,7 @@ let state = JSON.parse(localStorage.getItem("life_rpg")) || {
   tasksCompleted:0,
   bossesDefeated:0,
   goldEarned:0,
+  nextCompanionId:1,
 
   milestonesCompleted:[],
 
@@ -910,6 +1060,37 @@ let state = JSON.parse(localStorage.getItem("life_rpg")) || {
   teamSynergyPercentage:0
 
 };
+
+if(!state.nextCompanionId){
+  state.nextCompanionId = state.companions && state.companions.length
+    ? Math.max(...state.companions.map(c => c.id || 0)) + 1
+    : 1;
+}
+
+state.companions = state.companions.map(c => {
+  if(!c.id){
+    c.id = state.nextCompanionId++;
+  }
+  return c;
+});
+
+if(!state.taskNextId){
+  state.taskNextId = state.tasks && state.tasks.length
+    ? Math.max(...state.tasks.map(t => t.id || 0)) + 1
+    : 1;
+}
+
+state.tasks = state.tasks.map(t => ({
+  id: t.id || state.taskNextId++,
+  text: t.text || "",
+  weight: t.weight || 1,
+  category: t.category || "その他",
+  dueDate: t.dueDate || "",
+  note: t.note || "",
+  done: !!t.done,
+  createdAt: t.createdAt || new Date().toISOString(),
+  updatedAt: t.updatedAt || new Date().toISOString()
+}));
 
 // ======================
 // チーム相性ボーナス
@@ -1370,6 +1551,34 @@ function getTodayDateKey(){
   return new Date().toISOString().split('T')[0];
 }
 
+function getSortedCompanions(){
+  let sort = document.getElementById('monsterSort')?.value || 'default';
+  let rarityFilter = document.getElementById('monsterRarityFilter')?.value || 'all';
+  let elementFilter = document.getElementById('monsterElementFilter')?.value || 'all';
+  let list = [...state.companions];
+
+  if(rarityFilter !== 'all'){
+    list = list.filter(c=>c.rarity === rarityFilter);
+  }
+  if(elementFilter !== 'all'){
+    list = list.filter(c=>c.element === elementFilter);
+  }
+
+  if(sort === 'rarity'){
+    const order = { 'SSR': 0, 'SR': 1, 'R': 2, 'UC': 3, 'C': 4 };
+    list.sort((a,b)=>{
+      if(order[a.rarity] !== order[b.rarity]) return order[a.rarity] - order[b.rarity];
+      return b.atk - a.atk;
+    });
+  } else if(sort === 'atk'){
+    list.sort((a,b)=> b.atk - a.atk);
+  } else if(sort === 'name'){
+    list.sort((a,b)=> a.name.localeCompare(b.name, 'ja'));
+  }
+
+  return list;
+}
+
 function checkDailyMissions(){
 
   let today = getTodayDateKey();
@@ -1538,7 +1747,9 @@ function spawnBoss(){
 
   let mult = getDifficultyMultiplier();
 
-  let hp = Math.floor((100 + (state.level * 50)) * mult);
+  let partyPower = state.party.reduce((sum, c) => sum + c.atk, 0);
+  let base = 150 + state.level * 80 + Math.min(partyPower * 5, 500);
+  let hp = Math.floor(base * mult);
 
   state.boss = {
     hp,
@@ -1598,20 +1809,114 @@ function defeatBoss(){
 function addTask(){
 
   let text = taskInput.value.trim();
+  let note = taskNote.value.trim();
+  let category = taskCategory.value;
+  let dueDate = taskDueDate.value;
 
   if(!text) return;
 
   state.tasks.push({
+    id: state.taskNextId++,
     text,
+    note,
+    category,
+    dueDate,
     weight:Number(taskWeight.value),
-    done:false
+    done:false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   });
 
-  taskInput.value = "";
+  resetTaskForm();
 
   save();
   render();
 
+}
+
+function resetTaskForm(){
+  taskInput.value = "";
+  taskNote.value = "";
+  taskWeight.value = "1";
+  taskCategory.value = "仕事";
+  taskDueDate.value = "";
+}
+
+function getVisibleTasks(){
+  let filter = document.getElementById('taskViewFilter')?.value || 'all';
+  let dueFilter = document.getElementById('taskDueFilter')?.value || 'all';
+  let sort = document.getElementById('taskSort')?.value || 'created';
+  let search = document.getElementById('taskSearch')?.value.trim().toLowerCase();
+
+  let list = [...state.tasks];
+
+  if(filter !== 'all'){
+    list = list.filter(t => filter === 'done' ? t.done : !t.done);
+  }
+
+  let today = new Date();
+  let todayKey = today.toISOString().split('T')[0];
+
+  if(dueFilter !== 'all'){
+    list = list.filter(t => {
+      if(!t.dueDate) return false;
+      if(dueFilter === 'overdue') return t.dueDate < todayKey && !t.done;
+      if(dueFilter === 'today') return t.dueDate === todayKey;
+      if(dueFilter === 'upcoming') return t.dueDate > todayKey;
+      return true;
+    });
+  }
+
+  if(search){
+    list = list.filter(t =>
+      t.text.toLowerCase().includes(search) ||
+      t.note.toLowerCase().includes(search) ||
+      t.category.toLowerCase().includes(search)
+    );
+  }
+
+  if(sort === 'due'){
+    list.sort((a,b)=>{
+      if(!a.dueDate) return 1;
+      if(!b.dueDate) return -1;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+  } else if(sort === 'weight'){
+    list.sort((a,b)=> b.weight - a.weight || a.createdAt.localeCompare(b.createdAt));
+  } else if(sort === 'category'){
+    list.sort((a,b)=> a.category.localeCompare(b.category, 'ja'));
+  } else {
+    list.sort((a,b)=> a.createdAt.localeCompare(b.createdAt));
+  }
+
+  return list;
+}
+
+function editTask(index){
+  let task = state.tasks[index];
+  if(!task) return;
+
+  let newText = prompt('タスク内容を編集', task.text);
+  if(newText === null) return;
+
+  task.text = newText.trim() || task.text;
+  let newNote = prompt('メモを編集', task.note || '');
+  if(newNote !== null) task.note = newNote.trim();
+  let newCategory = prompt('カテゴリーを編集 (仕事/勉強/生活/趣味/その他)', task.category);
+  if(newCategory !== null) task.category = newCategory.trim() || task.category;
+  let newDueDate = prompt('期限を編集 (YYYY-MM-DD)', task.dueDate || '');
+  if(newDueDate !== null) task.dueDate = newDueDate.trim();
+
+  task.updatedAt = new Date().toISOString();
+  save();
+  render();
+}
+
+function deleteTask(index){
+  if(!confirm('本当にこのタスクを削除しますか？')) return;
+  state.tasks.splice(index, 1);
+  save();
+  render();
 }
 
 function moveTask(index, direction){
@@ -1632,8 +1937,15 @@ function moveTask(index, direction){
 async function completeTask(index){
 
   let task = state.tasks[index];
+  if(!task) return;
 
-  if(task.done) return;
+  if(task.done){
+    task.done = false;
+    state.tasksCompleted = Math.max(0, state.tasksCompleted - 1);
+    save();
+    render();
+    return;
+  }
 
   task.done = true;
 
@@ -1720,6 +2032,12 @@ async function completeTask(index){
       dmg *= 1.5;
     } else if(activeSkill.id === 5){ // 幸運
       state.gachaCoins += 1;
+    } else if(activeSkill.id === 7){ // ごちそうの時間
+      dmg *= 1.4;
+      expGain *= 1.15;
+    } else if(activeSkill.id === 8){ // 氷結の抱擁
+      goldGain *= 1.25;
+      dmg *= 1.05;
     }
   }
 
@@ -1818,6 +2136,7 @@ function applyOfflineProgress(){
   );
 
   let sec = Math.floor(diff / 1000);
+  let cappedSec = Math.min(sec, 3600);
 
   let dps = 0;
 
@@ -1826,20 +2145,17 @@ function applyOfflineProgress(){
   });
 
   let damage =
-  Math.floor(dps * sec / 5);
+  Math.floor(dps * cappedSec / 20);
+  damage = Math.min(damage, Math.max(1, Math.floor(state.boss.hp * 0.35)));
 
   let gold =
-  Math.floor(sec * .5);
+  Math.floor(cappedSec * 0.2 + state.party.length * 2);
 
   state.gold += gold;
 
-  state.boss.hp -= damage;
+  state.boss.hp = Math.max(1, state.boss.hp - damage);
 
   state.lastLogin = now;
-
-  if(state.boss.hp <= 0){
-    defeatBoss();
-  }
 
   alert(
 `放置報酬
@@ -1939,46 +2255,53 @@ function getRarity(){
 
 function createMonster(r){
 
+  if(r.name === "SSR"){
+    let ssr = rand(SSR_CHARACTERS);
+    return {
+      id: state.nextCompanionId++,
+      name:ssr.name,
+      rarity:ssr.rarity,
+      color:ssr.color,
+      atk:ssr.atk,
+      level:1,
+      element:ssr.element,
+      elementIcon:ssr.elementIcon,
+      role:ssr.role,
+      roleIcon:ssr.roleIcon,
+      roleName:ssr.roleName,
+      skill:ssr.skill,
+      image:ssr.image,
+      evolutionLevel:0,
+      skillEnhance:0,
+      isLeader:false
+    };
+  }
+
   let el = rand(ELEMENTS);
-
   let role = rand(ROLES);
-
   let skill = rand(SKILLS);
 
   return {
-
+    id: state.nextCompanionId++,
     name:
     `${r.name} ${rand(MONSTER_NAMES)}`,
-
     rarity:r.name,
-
     color:r.color,
-
     atk:
     Math.floor(
       (Math.random()*5 + 3)
       * r.multi
     ),
-
     level:1,
-
     element:el.id,
-
     elementIcon:el.icon,
-
     role:role.id,
-
     roleIcon:role.icon,
-
     roleName:role.name,
-
     skill:skill,
-
-    // 新しいプロパティ
     evolutionLevel:0,
     skillEnhance:0,
     isLeader:false
-
   };
 
 }
@@ -2038,7 +2361,7 @@ async function playGachaAnimation(results){
   for(let r of results){
 
     if(r.rarity==="SSR"){
-      await showCutin();
+      await showCutin(r);
     }
 
     let card = createCard(r);
@@ -2068,6 +2391,8 @@ function createCard(c){
   style="color:${c.color}">
   ${c.rarity}
   </div>
+
+  ${c.image ? `<img src="${c.image}" alt="${c.name}" style="width:100%;border-radius:8px;margin:8px 0;">` : ''}
 
   <div style="margin:5px 0;">
   ${c.name}
@@ -2144,7 +2469,24 @@ async function ssrRainbowEffect(){
 
 }
 
-async function showCutin(){
+async function showCutin(ssr){
+
+  let cutinImg = document.getElementById('cutinImg');
+  let cutinText = document.getElementById('cutinText');
+
+  if(ssr && ssr.image){
+    cutinImg.src = ssr.image;
+  } else {
+    cutinImg.src = '';
+  }
+
+  if(ssr && ssr.name === 'アコリ'){
+    cutinText.innerText = '「ごちそうの時間だよ♡」';
+  } else if(ssr && ssr.name === 'メルティア'){
+    cutinText.innerText = '「氷結の癒し、届けるよ。」';
+  } else {
+    cutinText.innerText = 'SSRきた！';
+  }
 
   cutin.style.display = "flex";
 
@@ -2169,8 +2511,8 @@ function addParty(index){
   }
 
   // 同じモンスターが既に編成されているかチェック
-  let monsterName = state.companions[index].name;
-  let isAlreadyInParty = state.party.some(c => c.name === monsterName);
+  let monsterId = state.companions[index].id;
+  let isAlreadyInParty = state.party.some(c => c.id === monsterId);
 
   if(isAlreadyInParty){
     alert("このモンスターは既に編成されています");
@@ -2184,6 +2526,19 @@ function addParty(index){
   save();
   render();
 
+}
+
+function addPartyById(id){
+  let index = state.companions.findIndex(c => c.id === id);
+  if(index !== -1){
+    addParty(index);
+  }
+}
+
+function removeFromParty(id){
+  state.party = state.party.filter(c => c.id !== id);
+  save();
+  render();
 }
 
 // ======================
@@ -2308,7 +2663,11 @@ function render(){
   // タスク
   taskList.innerHTML = "";
 
-  state.tasks.forEach((t,i)=>{
+  let visibleTasks = getVisibleTasks();
+
+  visibleTasks.forEach((t,i)=>{
+
+    let originalIndex = state.tasks.findIndex(task => task.id === t.id);
 
     let div =
     document.createElement("div");
@@ -2317,25 +2676,40 @@ function render(){
     `task ${t.done ? "done":""}`;
 
     div.onclick =
-    ()=>completeTask(i);
+    ()=>{ if(!t.done) completeTask(originalIndex); };
 
-    let upBtn = i > 0 ? `<button onclick="moveTask(${i}, 'up')" style="padding:4px 8px;font-size:12px;background:#3b82f6;margin-right:4px;">▲</button>` : '';
-    let downBtn = i < state.tasks.length - 1 ? `<button onclick="moveTask(${i}, 'down')" style="padding:4px 8px;font-size:12px;background:#3b82f6;">▼</button>` : '';
+    let upBtn = originalIndex > 0 ? `<button onclick="event && event.stopPropagation(); moveTask(${originalIndex}, 'up')" style="padding:4px 8px;font-size:12px;background:#3b82f6;margin-right:4px;">▲</button>` : '';
+    let downBtn = originalIndex < state.tasks.length - 1 ? `<button onclick="event && event.stopPropagation(); moveTask(${originalIndex}, 'down')" style="padding:4px 8px;font-size:12px;background:#3b82f6;">▼</button>` : '';
+
+    let dueClass = '';
+    let dueBadge = '';
+    if(t.dueDate){
+      let todayKey = new Date().toISOString().split('T')[0];
+      if(t.dueDate < todayKey && !t.done){
+        dueClass = 'dueBadge';
+      } else {
+        dueClass = 'categoryBadge';
+      }
+      dueBadge = `<span class="dueBadge">期限: ${t.dueDate}</span>`;
+    }
 
     div.innerHTML = `
 
-    <div>
-    ${t.text}
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:bold;">${t.text}</div>
+      ${t.note ? `<div class="noteText">${t.note}</div>` : ''}
+      <div class="taskMeta">
+        <span class="categoryBadge">${t.category}</span>
+        <span>重要度 ×${t.weight}</span>
+        ${t.dueDate ? `<span class="dueBadge">期限: ${t.dueDate}</span>` : ''}
+      </div>
     </div>
 
-    <div style="display:flex;align-items:center;gap:4px;">
-    ${upBtn}
-    ${downBtn}
-    <div class="
-    weight
-    w${t.weight}">
-    ×${t.weight}
-    </div>
+    <div class="taskActions">
+      <button onclick="event && event.stopPropagation(); editTask(${originalIndex})">編集</button>
+      <button onclick="event && event.stopPropagation(); deleteTask(${originalIndex})">削除</button>
+      <button onclick="event && event.stopPropagation(); completeTask(${originalIndex})" style="background:${t.done ? '#4ade80' : '#f59e0b'};">${t.done ? '完了解除' : '完了'}</button>
+      <div style="display:flex;gap:4px;">${upBtn}${downBtn}</div>
     </div>
 
     `;
@@ -2365,6 +2739,8 @@ function render(){
     ${c.rarity}
     </div>
 
+    ${c.image ? `<img src="${c.image}" alt="${c.name}" style="width:100%;border-radius:8px;margin:8px 0;">` : ''}
+
     <div>${c.name}</div>
 
     <div class="element">
@@ -2385,6 +2761,8 @@ function render(){
     <div style="color:#facc15;font-weight:bold;">${c.skill.icon} ${c.skill.name}</div>
     </div>
 
+    <button onclick="removeFromParty(${c.id})" style="background:#ef4444;width:100%;margin-top:8px;">編成解除</button>
+
     `;
 
     partyArea.appendChild(div);
@@ -2395,7 +2773,7 @@ function render(){
   let monsterList = document.getElementById('monsterList');
   if(monsterList){
     monsterList.innerHTML = "";
-    state.companions.forEach((c,i)=>{
+    getSortedCompanions().forEach(c=>{
       let div =
       document.createElement("div");
       div.className = "card";
@@ -2408,6 +2786,8 @@ function render(){
       style="color:${c.color}">
       ${c.rarity}
       </div>
+
+      ${c.image ? `<img src="${c.image}" alt="${c.name}" style="width:100%;border-radius:8px;margin:8px 0;">` : ''}
 
       <div>${c.name}</div>
 
@@ -2430,7 +2810,7 @@ function render(){
       <div style="font-size:11px;color:#aaa;margin-top:2px;">${c.skill.desc}</div>
       </div>
 
-      <button onclick="addParty(${i})">
+      <button onclick="addPartyById(${c.id})">
       編成
       </button>
 
