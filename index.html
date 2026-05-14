@@ -1,4 +1,4 @@
-ver3
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -359,6 +359,25 @@ input,select{
   100%{transform:translate(0);}
 }
 
+#toastContainer .toast{
+  background:rgba(15,52,96,0.95);
+  border:1px solid rgba(76,201,240,0.5);
+  border-radius:12px;
+  padding:12px 14px;
+  color:#fff;
+  box-shadow:0 12px 24px rgba(0,0,0,.25);
+  animation:toastIn .25s ease;
+}
+
+#toastContainer .toast.success{border-color:#4ade80;}
+#toastContainer .toast.error{border-color:#ef4444;}
+#toastContainer .toast.info{border-color:#3b82f6;}
+
+@keyframes toastIn{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
 /* タブシステム */
 .tabContainer{
   display:flex;
@@ -548,6 +567,8 @@ input,select{
   <div style="font-weight:bold;color:#4ade80;">🎁 ログインボーナス！</div>
   <div id="loginBonusMsg" style="margin-top:8px;"></div>
 </div>
+
+<div id="toastContainer" style="position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:10px;z-index:6000;max-width:320px;"></div>
 
 <div class="panel">
 <h3>🧠 ステータス</h3>
@@ -752,13 +773,13 @@ SSRは特別演出あり。
 
 <!-- タブシステム -->
 <div class="tabContainer">
-<button class="tabBtn active" onclick="switchTab('party')">⚔️ 編成</button>
-<button class="tabBtn" onclick="switchTab('training')">📈 育成</button>
-<button class="tabBtn" onclick="switchTab('dex')">📚 図鑑</button>
-<button class="tabBtn" onclick="switchTab('stats')">🏆 統計</button>
-<button class="tabBtn" onclick="switchTab('boss')">🐉 ボス分析</button>
-<button class="tabBtn" onclick="switchTab('missions')">🎯 ミッション</button>
-<button class="tabBtn" onclick="switchTab('settings')">⚙️ 設定</button>
+<button class="tabBtn active" onclick="switchTab('party', event)">⚔️ 編成</button>
+<button class="tabBtn" onclick="switchTab('training', event)">📈 育成</button>
+<button class="tabBtn" onclick="switchTab('dex', event)">📚 図鑑</button>
+<button class="tabBtn" onclick="switchTab('stats', event)">🏆 統計</button>
+<button class="tabBtn" onclick="switchTab('boss', event)">🐉 ボス分析</button>
+<button class="tabBtn" onclick="switchTab('missions', event)">🎯 ミッション</button>
+<button class="tabBtn" onclick="switchTab('settings', event)">⚙️ 設定</button>
 </div>
 
 <!-- 編成タブ -->
@@ -953,7 +974,7 @@ const SHOP_ITEMS = [
   {id:3, name:"ガチャコイン×5", icon:"🪙", price:210, reward:{coin:5}},
   {id:4, name:"ガチャコイン×10", icon:"🪙", price:350, reward:{coin:10}},
   {id:5, name:"ボーナスEXP", icon:"✨", price:100, reward:{exp:50}},
-  {id:6, name:"ゴールドキット", icon:"💰", price:0, reward:{gold:100}}
+  {id:6, name:"ゴールドキット", icon:"💰", price:120, reward:{gold:100}}
 ];
 
 const SKILLS = [
@@ -1213,7 +1234,7 @@ function getLimitedBoss(){
 // タブシステム
 // ======================
 
-function switchTab(tabName){
+function switchTab(tabName, evt){
 
   // すべてのタブコンテンツを非表示
   document.querySelectorAll('.tabContent').forEach(tab=>{
@@ -1232,7 +1253,9 @@ function switchTab(tabName){
   }
 
   // 対応するボタンをアクティブ化
-  event.target.classList.add('active');
+  if(evt && evt.currentTarget){
+    evt.currentTarget.classList.add('active');
+  }
 
   // タブ別の処理を実行
   if(tabName === 'training'){
@@ -1337,7 +1360,7 @@ function evolveMonster(index){
 
   let needed = 5;
   if(!state.materials[companion.rarity] || state.materials[companion.rarity] < needed){
-    alert(`${companion.rarity} 素材が不足しています！\n必要：${needed}個\n所持：${state.materials[companion.rarity] || 0}個`);
+    showToast(`${companion.rarity} 素材が不足しています！<br>必要：${needed}個<br>所持：${state.materials[companion.rarity] || 0}個`, "error");
     return;
   }
 
@@ -1346,7 +1369,7 @@ function evolveMonster(index){
   let oldAtk = companion.atk;
   companion.atk = Math.floor(companion.atk * 1.25);
 
-  alert(`${companion.name} が進化しました！\n進化Lv${companion.evolutionLevel}\nATK: ${Math.floor(oldAtk)} → ${companion.atk}`);
+  showToast(`${companion.name} が進化しました！<br>進化Lv${companion.evolutionLevel}<br>ATK: ${Math.floor(oldAtk)} → ${companion.atk}`, "success");
 
   save();
   render();
@@ -1360,14 +1383,14 @@ function enhanceSkill(index){
 
   let needed = 3;
   if(!state.materials[companion.rarity] || state.materials[companion.rarity] < needed){
-    alert(`${companion.rarity} 素材が不足しています！\n必要：${needed}個\n所持：${state.materials[companion.rarity] || 0}個`);
+    showToast(`${companion.rarity} 素材が不足しています！<br>必要：${needed}個<br>所持：${state.materials[companion.rarity] || 0}個`, "error");
     return;
   }
 
   state.materials[companion.rarity] -= needed;
   companion.skillEnhance = (companion.skillEnhance || 0) + 1;
 
-  alert(`${companion.name} のスキルを強化しました！\nレベル：${companion.skillEnhance}`);
+  showToast(`${companion.name} のスキルを強化しました！<br>レベル：${companion.skillEnhance}`, "success");
 
   save();
   render();
@@ -1379,7 +1402,7 @@ function setLeader(index){
   state.companions.forEach(c => c.isLeader = false);
   state.companions[index].isLeader = true;
 
-  alert(`${state.companions[index].name} をリーダーに設定しました！`);
+  showToast(`${state.companions[index].name} をリーダーに設定しました！`, "success");
 
   save();
   render();
@@ -1525,12 +1548,31 @@ function renderTraining(){
   }
 
   trainingContainer.innerHTML = html;
+}
+
+function showToast(message, type = 'info'){
+  let container = document.getElementById('toastContainer');
+  if(!container) return;
+  let toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = message.replace(/\n/g, '<br>');
+  container.appendChild(toast);
+  setTimeout(()=>{
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(()=> toast.remove(), 300);
+  }, 5000);
+}
+
+function clearToasts(){
+  let container = document.getElementById('toastContainer');
+  if(!container) return;
+  container.innerHTML = '';
+}
 
 // ======================
 // Utils
 // ======================
-
-}
 
 function save(){
   localStorage.setItem(
@@ -1609,15 +1651,7 @@ function checkDailyMissions(){
       state.gachaCoins += m.reward.coin;
       state.gold += m.reward.gold;
 
-      alert(
-        `🇦 デイリーミッション達成！
-
-${m.name}
-${m.desc}
-
-報酬：ガチャコイン+${m.reward.coin}
-ゴールド+${m.reward.gold}`
-      );
+showToast(`🇦 デイリーミッション達成！<br>${m.name}<br>${m.desc}<br>報酬：ガチャコイン+${m.reward.coin} ゴールド+${m.reward.gold}`, "success");
 
     }
 
@@ -1651,15 +1685,7 @@ function checkMilestones(){
       state.gachaCoins += m.reward.coin;
       state.gold += m.reward.gold;
 
-      alert(
-        `🎁 マイルストーン達成！
-
-${m.name}
-${m.desc}
-
-報酬：ガチャコイン+${m.reward.coin}
-ゴールド+${m.reward.gold}`
-      );
+showToast(`🎁 マイルストーン達成！<br>${m.name}<br>${m.desc}<br>報酬：ガチャコイン+${m.reward.coin} ゴールド+${m.reward.gold}`, "success");
 
     }
 
@@ -1678,7 +1704,7 @@ function buyShopItem(itemId){
   if(!item) return;
 
   if(state.gold < item.price){
-    alert("ゴールド不足");
+    showToast("ゴールド不足", "error");
     return;
   }
 
@@ -1688,9 +1714,7 @@ function buyShopItem(itemId){
   if(item.reward.exp) state.exp += item.reward.exp;
   if(item.reward.gold) state.gold += item.reward.gold;
 
-  alert(`購入成功！
-\n${item.name}
-を手に入れた！`);
+  showToast(`購入成功！<br>${item.name}を手に入れた！`, "success");
 
   save();
   render();
@@ -1793,7 +1817,7 @@ function defeatBoss(){
 
   state.bossesDefeated++;
 
-  alert("ボス撃破！ガチャコイン+1");
+  showToast("ボス撃破！ガチャコイン+1", "success");
 
   checkMilestones();
   checkDailyMissions();
@@ -2065,15 +2089,9 @@ async function completeTask(index){
 
   // レベル
   while(state.exp >= EXP_PER_LEVEL){
-
     state.exp -= EXP_PER_LEVEL;
-
     state.level++;
-
-    alert(
-      `レベルアップ！ Lv${state.level}`
-    );
-
+    showToast(`レベルアップ！ Lv${state.level}`, "success");
   }
 
   // ボス
@@ -2157,15 +2175,7 @@ function applyOfflineProgress(){
 
   state.lastLogin = now;
 
-  alert(
-`放置報酬
-
-ダメージ:
-${damage}
-
-Gold:
-${gold}`
-  );
+  showToast(`放置報酬<br>ダメージ: ${damage}<br>Gold: ${gold}`, "info");
 
   checkMilestones();
   checkDailyMissions();
@@ -2199,17 +2209,14 @@ function levelUpMonster(rarity, index){
   let companion = state.companions[index];
 
   if(!companion || companion.rarity !== rarity){
-    alert("モンスターを選択してください");
+    showToast("モンスターを選択してください", "error");
     return;
   }
 
   let needed = rarity === "SSR" ? 3 : (rarity === "SR" ? 2 : 1);
 
   if(!state.materials[rarity] || state.materials[rarity] < needed){
-    alert(`${rarity} 素材が不足しています！
-
-必要：${needed}個
-所持：${state.materials[rarity] || 0}個`);
+    showToast(`${rarity} 素材が不足しています！<br>必要：${needed}個<br>所持：${state.materials[rarity] || 0}個`, "error");
     return;
   }
 
@@ -2218,13 +2225,7 @@ function levelUpMonster(rarity, index){
   let oldAtk = companion.atk;
   companion.atk = Math.floor(companion.atk * 1.15);
 
-  alert(`
-素材を消費して
-
-${companion.name}
-を Lv${companion.level} に上げました！
-
-ATK: ${Math.floor(oldAtk)} → ${companion.atk}`);
+  showToast(`素材を消費して<br>${companion.name}<br>を Lv${companion.level} に上げました！<br>ATK: ${Math.floor(oldAtk)} → ${companion.atk}`, "success");
 
   save();
   render();
@@ -2309,7 +2310,7 @@ function createMonster(r){
 async function runGacha(){
 
   if(state.gachaCoins <= 0){
-    alert("コイン不足");
+    showToast("コイン不足", "error");
     return;
   }
 
@@ -2503,11 +2504,8 @@ async function showCutin(ssr){
 function addParty(index){
 
   if(state.party.length >= MAX_PARTY){
-
-    alert("編成上限");
-
+    showToast("編成上限です。まず編成を整理してください。", "error");
     return;
-
   }
 
   // 同じモンスターが既に編成されているかチェック
@@ -2515,7 +2513,7 @@ function addParty(index){
   let isAlreadyInParty = state.party.some(c => c.id === monsterId);
 
   if(isAlreadyInParty){
-    alert("このモンスターは既に編成されています");
+    showToast("このモンスターは既に編成されています。", "info");
     return;
   }
 
@@ -2774,6 +2772,7 @@ function render(){
   if(monsterList){
     monsterList.innerHTML = "";
     getSortedCompanions().forEach(c=>{
+      let inParty = state.party.some(pc => pc.id === c.id);
       let div =
       document.createElement("div");
       div.className = "card";
@@ -2810,8 +2809,8 @@ function render(){
       <div style="font-size:11px;color:#aaa;margin-top:2px;">${c.skill.desc}</div>
       </div>
 
-      <button onclick="addPartyById(${c.id})">
-      編成
+      <button ${inParty ? 'disabled style="opacity:.6;cursor:not-allowed;background:#374151;"' : ''} ${inParty ? '' : `onclick="addPartyById(${c.id})"`}>
+      ${inParty ? '編成済み' : '編成'}
       </button>
 
       `;
